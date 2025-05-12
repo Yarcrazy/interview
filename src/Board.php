@@ -5,41 +5,41 @@ class Board {
     private $isBlackMove = false;
 
     public function __construct() {
-        $this->figures['a'][1] = new Rook(false);
-        $this->figures['b'][1] = new Knight(false);
-        $this->figures['c'][1] = new Bishop(false);
-        $this->figures['d'][1] = new Queen(false);
-        $this->figures['e'][1] = new King(false);
-        $this->figures['f'][1] = new Bishop(false);
-        $this->figures['g'][1] = new Knight(false);
-        $this->figures['h'][1] = new Rook(false);
+        $this->figures['a'][1] = new Rook(false, 'a', 1);
+        $this->figures['b'][1] = new Knight(false, 'b', 1);
+        $this->figures['c'][1] = new Bishop(false, 'c', 1);
+        $this->figures['d'][1] = new Queen(false, 'd', 1);
+        $this->figures['e'][1] = new King(false, 'e', 1);
+        $this->figures['f'][1] = new Bishop(false, 'f', 1);
+        $this->figures['g'][1] = new Knight(false, 'g', 1);
+        $this->figures['h'][1] = new Rook(false, 'h', 1);
 
-        $this->figures['a'][2] = new Pawn(false);
-        $this->figures['b'][2] = new Pawn(false);
-        $this->figures['c'][2] = new Pawn(false);
-        $this->figures['d'][2] = new Pawn(false);
-        $this->figures['e'][2] = new Pawn(false);
-        $this->figures['f'][2] = new Pawn(false);
-        $this->figures['g'][2] = new Pawn(false);
-        $this->figures['h'][2] = new Pawn(false);
+        $this->figures['a'][2] = new Pawn(false, 'a', 2);
+        $this->figures['b'][2] = new Pawn(false, 'b', 2);
+        $this->figures['c'][2] = new Pawn(false, 'c', 2);
+        $this->figures['d'][2] = new Pawn(false, 'd', 2);
+        $this->figures['e'][2] = new Pawn(false, 'e', 2);
+        $this->figures['f'][2] = new Pawn(false, 'f', 2);
+        $this->figures['g'][2] = new Pawn(false, 'g', 2);
+        $this->figures['h'][2] = new Pawn(false, 'h', 2);
 
-        $this->figures['a'][7] = new Pawn(true);
-        $this->figures['b'][7] = new Pawn(true);
-        $this->figures['c'][7] = new Pawn(true);
-        $this->figures['d'][7] = new Pawn(true);
-        $this->figures['e'][7] = new Pawn(true);
-        $this->figures['f'][7] = new Pawn(true);
-        $this->figures['g'][7] = new Pawn(true);
-        $this->figures['h'][7] = new Pawn(true);
+        $this->figures['a'][7] = new Pawn(true, 'a', 7);
+        $this->figures['b'][7] = new Pawn(true, 'b', 7);
+        $this->figures['c'][7] = new Pawn(true, 'c', 7);
+        $this->figures['d'][7] = new Pawn(true, 'd', 7);
+        $this->figures['e'][7] = new Pawn(true, 'e', 7);
+        $this->figures['f'][7] = new Pawn(true, 'f', 7);
+        $this->figures['g'][7] = new Pawn(true, 'g', 7);
+        $this->figures['h'][7] = new Pawn(true, 'h', 7);
 
-        $this->figures['a'][8] = new Rook(true);
-        $this->figures['b'][8] = new Knight(true);
-        $this->figures['c'][8] = new Bishop(true);
-        $this->figures['d'][8] = new Queen(true);
-        $this->figures['e'][8] = new King(true);
-        $this->figures['f'][8] = new Bishop(true);
-        $this->figures['g'][8] = new Knight(true);
-        $this->figures['h'][8] = new Rook(true);
+        $this->figures['a'][8] = new Rook(true, 'a', 8);
+        $this->figures['b'][8] = new Knight(true, 'b', 8);
+        $this->figures['c'][8] = new Bishop(true, 'c', 8);
+        $this->figures['d'][8] = new Queen(true, 'd', 8);
+        $this->figures['e'][8] = new King(true, 'e', 8);
+        $this->figures['f'][8] = new Bishop(true, 'f', 8);
+        $this->figures['g'][8] = new Knight(true, 'g', 8);
+        $this->figures['h'][8] = new Rook(true, 'h', 8);
     }
 
     public function move($move) {
@@ -53,11 +53,38 @@ class Board {
         $yTo   = $match[4];
 
         if (isset($this->figures[$xFrom][$yFrom])) {
-            if (!$this->isTurnOrderCorrect($this->figures[$xFrom][$yFrom]->getIsBlack())) {
+            /**
+             * @var Figure $figure
+             */
+            $figure = $this->figures[$xFrom][$yFrom];
+            if (!$this->isTurnOrderCorrect($figure->getIsBlack())) {
                 throw new Exception('incorrect turn order!');
             }
 
-            $this->figures[$xTo][$yTo] = $this->figures[$xFrom][$yFrom];
+            $nextTurn = new Turn($xTo, $yTo);
+
+            //формирую занятые позиции
+            $positions = [];
+            foreach ($this->figures as $x => $temp) {
+                foreach ($temp as $y => $trash) {
+                    $positions[] = new Turn($x, $y);
+                }
+            }
+
+            $validator = new FigureValidator(
+                $figure,
+                $positions,
+                $nextTurn
+            );
+
+            $error = $validator->validate();
+            if ($error !== true) {
+                throw new Exception($error);
+            }
+
+            $figure->moveFigure($nextTurn);
+            $this->figures[$xTo][$yTo] = $figure;
+
             $this->changeTurn();
         }
         unset($this->figures[$xFrom][$yFrom]);
