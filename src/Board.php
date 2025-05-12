@@ -2,6 +2,7 @@
 
 class Board {
     private $figures = [];
+    private $isBlackMove = false;
 
     public function __construct() {
         $this->figures['a'][1] = new Rook(false);
@@ -52,7 +53,12 @@ class Board {
         $yTo   = $match[4];
 
         if (isset($this->figures[$xFrom][$yFrom])) {
+            if (!$this->isTurnOrderCorrect($this->figures[$xFrom][$yFrom]->getIsBlack())) {
+                throw new Exception('incorrect turn order!');
+            }
+
             $this->figures[$xTo][$yTo] = $this->figures[$xFrom][$yFrom];
+            $this->changeTurn();
         }
         unset($this->figures[$xFrom][$yFrom]);
     }
@@ -70,5 +76,15 @@ class Board {
             echo "\n";
         }
         echo "  abcdefgh\n";
+    }
+
+    private function changeTurn(): void
+    {
+        $this->isBlackMove = !$this->isBlackMove;
+    }
+
+    private function isTurnOrderCorrect(bool $isBlack): bool
+    {
+        return $this->isBlackMove === $isBlack;
     }
 }
